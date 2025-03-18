@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{{ title }}</title>
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+            rel="stylesheet">
+        <link href="{{ url_for('static', path='/css/styles.css') }}"
+            rel="stylesheet">
+    </head>
+    <body>
+        <header>
+            <nav
+                class="navbar navbar-expand-lg navbar-light bg-light">
+                <div class="container-fluid mx-2">
+                    <ul class="navbar-nav d-flex flex-row">
+                        <li class="nav-item me-3">
+                            <a class="nav-link active" href="/">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link"
+                                href="/predict/">Classification</a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </header>
+
+        <div class="hero-section">
+            <div class="container">
+                <div class="row align-items-center hero-content">
+                    <div class="col-lg-6 mb-3 mb-lg-0">
+                        <h6 class="display-6 fw-bold mb-4 ai-title">Image
+                            Classification</h6>
+                        <p class="lead mb-4">Instantly classify and identify
+                            Canadian Institute for Advanced Research (CIFAR) 10
+                            images with remarkable accuracy.</p>
+                        <div class="cta-wrapper">
+                            <a href="/predict/"
+                                class="btn btn-primary btn-sm btn-animated">
+                                <span>Try It Now</span>
+                                <svg width="20" height="20" viewBox="0 0 24 24"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M5 12H19M19 12L12 5M19 12L12 19"
+                                        stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                </svg>
+                            </a>
+                        </div>
+                        <div class="tech-stack mt-5">
+                            <span class="tech-badge">ResNet18</span>
+                            <span class="tech-badge">MobileNetV2</span>
+                            <span class="tech-badge">CNN</span>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 text-center">
+                        <div class="image-container">
+                            <img
+                                src="{{ url_for('static', path='/images/ai-classification.svg') }}"
+                                alt="Image Classification Illustration"
+                                class="img-fluid hero-image">
+                            <div class="image-backdrop"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="features-section py-5">
+            <div class="container">
+                <div class="row justify-content-center g-4">
+                    <div class="col-md-4">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                    width="32" height="32" fill="currentColor"
+                                    viewBox="0 0 16 16">
+                                    <path
+                                        d="M6 13c0 1.105-1.12 2-2.5 2S1 14.105 1 13c0-1.104 1.12-2 2.5-2s2.5.896 2.5 2zm9-2c0 1.105-1.12 2-2.5 2s-2.5-.895-2.5-2 1.12-2 2.5-2 2.5.895 2.5 2z" />
+                                    <path fill-rule="evenodd"
+                                        d="M14 11V2h1v9h-1zM6 3v10H5V3h1z" />
+                                    <path
+                                        d="M5 2.905a1 1 0 0 1 .9-.995l8-.8a1 1 0 0 1 1.1.995V3L5 4V2.905z" />
+                                </svg>
+                            </div>
+                            <h3>Advanced AI</h3>
+                            <p>Powered by state-of-the-art ResNet18, MobileNetV2, and a custom CNN for accurate image
+                                classification.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                    width="32" height="32" fill="currentColor"
+                                    viewBox="0 0 16 16">
+                                    <path
+                                        d="M5 8.5c0 .828-.668 1.5-1.5 1.5S2 9.328 2 8.5 2.668 7 3.5 7 5 7.672 5 8.5zm5 0c0 .828-.668 1.5-1.5 1.5s-1.5-.672-1.5-1.5.668-1.5 1.5-1.5 1.5.672 1.5 1.5zm5 0c0 .828-.668 1.5-1.5 1.5s-1.5-.672-1.5-1.5.668-1.5 1.5-1.5 1.5.672 1.5 1.5z" />
+                                    <path
+                                        d="M15.5 2h-13A2.5 2.5 0 0 0 0 4.5v7A2.5 2.5 0 0 0 2.5 14h13a.5.5 0 0 0 .5-.5v-11a.5.5 0 0 0-.5-.5zm-13 1a1.5 1.5 0 0 0-1.5 1.5v7A1.5 1.5 0 0 0 2.5 13h13a.5.5 0 0 0 .5-.5v-11a.5.5 0 0 0-.5-.5h-13z" />
+                                </svg>
+                            </div>
+                            <h3>Instant Results</h3>
+                            <p>Get immediate classification results with high
+                                confidence scores in just seconds.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                    width="32" height="32" fill="currentColor"
+                                    viewBox="0 0 16 16">
+                                    <path
+                                        d="M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5 8 5.961 14.154 3.5 8.186 1.113zM15 4.239l-6.5 2.6v7.922l6.5-2.6V4.24zM7.5 14.762V6.838L1 4.239v7.923l6.5 2.6zM7.443.184a1.5 1.5 0 0 1 1.114 0l7.129 2.852A.5.5 0 0 1 16 3.5v8.662a1 1 0 0 1-.629.928l-7.185 2.874a.5.5 0 0 1-.372 0L.63 13.09a1 1 0 0 1-.63-.928V3.5a.5.5 0 0 1 .314-.464L7.443.184z" />
+                                </svg>
+                            </div>
+                            <h3>User-Friendly</h3>
+                            <p>Clean and intuitive interface designed for an
+                                effortless user experience.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer mt-auto py-2 fixed-bottom">
+            <div class="container">
+                <div class="row gy-3 align-items-center">
+                    <div class="col-md-4 text-center text-md-start">
+                        <h6 class="mb-1">Project By</h6>
+                        <div
+                            class="d-flex align-items-center justify-content-center justify-content-md-start">
+                            <div class="me-2">
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                    width="16" height="16" fill="currentColor"
+                                    class="bi bi-people" viewBox="0 0 16 16">
+                                    <path
+                                        d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1h8Zm-7.978-1A.261.261 0 0 1 7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002a.274.274 0 0 1-.014.002H7.022ZM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM6.936 9.28a5.88 5.88 0 0 0-1.23-.247A7.35 7.35 0 0 0 5 9c-4 0-5 3-5 4 0 .667.333 1 1 1h4.216A2.238 2.238 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816ZM4.92 10A5.493 5.493 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275ZM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0Zm3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z" />
+                                </svg>
+                            </div>
+                            <span class="fw-light">Group 3, EL4 UMaT 2025
+                                Class</span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 text-center">
+                        <h6 class="mb-1">Course Instructor</h6>
+                        <a href="https://www.umat.edu.gh/staffinfo/staffDetailed.php?contactID=171" target="_blank"
+                            class="text-decoration-none text-info">
+                            <div
+                                class="d-flex align-items-center justify-content-center">
+                                <div class="me-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                        width="16" height="16"
+                                        fill="currentColor"
+                                        class="bi bi-person-workspace"
+                                        viewBox="0 0 16 16">
+                                        <path
+                                            d="M4 16s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H4Zm4-5.95a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" />
+                                        <path
+                                            d="M2 1a2 2 0 0 0-2 2v9.5A1.5 1.5 0 0 0 1.5 14h.653a5.373 5.373 0 0 1 1.066-2H1V3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v9h-2.219c.554.654.89 1.373 1.066 2h.653a1.5 1.5 0 0 0 1.5-1.5V3a2 2 0 0 0-2-2H2Z" />
+                                    </svg>
+                                </div>
+                                <span class="fw-light">Dr. Effah Ema</span>
+                            </div>
+                        </a>
+                    </div>
+
+                    <div class="col-md-4 text-center text-md-end">
+                        <h6 class="mb-1">App Exposed By</h6>
+                        <a href="https:aaronontoyin.tech" target="_blank"
+                            class="text-decoration-none text-info">
+                            <div
+                                class="d-flex align-items-center justify-content-center justify-content-md-end">
+                                <div class="me-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                        width="16" height="16"
+                                        fill="currentColor" class="bi bi-github"
+                                        viewBox="0 0 16 16">
+                                        <path
+                                            d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
+                                    </svg>
+                                </div>
+                                <span class="fw-light">Aaron Ontoyin Yin</span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col text-center">
+                        <div class="border-top border-secondary pt-3">
+                            <small class="text-muted">&copy; 2025 Image
+                                Classification Project - Digital Signal and
+                                Image Processing, EL 463</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+        <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="{{ url_for('static', path='/js/script.js') }}"></script>
+    </body>
+</html>
