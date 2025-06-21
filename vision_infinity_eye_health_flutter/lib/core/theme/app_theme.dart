@@ -42,13 +42,13 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     ),
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: const Color(0xFFF1F5F9), // Slightly off-white
       surfaceTintColor: Colors.transparent,
     ),
-    dialogTheme: DialogTheme(
+    dialogTheme: DialogThemeData(
       elevation: 0,
       backgroundColor: const Color(0xFFF1F5F9), // Slightly off-white
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -68,7 +68,7 @@ class AppTheme {
         return const Color(0xFF64748B).withOpacity(0.2);
       }),
     ),
-    tabBarTheme: const TabBarTheme(
+    tabBarTheme: const TabBarThemeData(
       labelPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       indicatorSize: TabBarIndicatorSize.tab,
     ),
@@ -126,7 +126,7 @@ class AppTheme {
         return const Color(0xFF94A3B8).withOpacity(0.2);
       }),
     ),
-    tabBarTheme: const TabBarTheme(
+    tabBarTheme: const TabBarThemeData(
       labelPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       indicatorSize: TabBarIndicatorSize.tab,
     ),
