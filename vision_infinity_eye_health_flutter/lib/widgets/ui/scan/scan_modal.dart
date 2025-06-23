@@ -65,6 +65,146 @@ class ImagePreviewDialog extends StatelessWidget {
   }
 }
 
+// Particle effect painter for scanning animation
+class _ParticleEffectPainter extends CustomPainter {
+  final double progress;
+  final List<_Particle> particles = [];
+  
+  _ParticleEffectPainter(this.progress) {
+    // Initialize particles if empty
+    if (particles.isEmpty) {
+      for (var i = 0; i < 20; i++) {
+        particles.add(_Particle(
+          angle: math.Random().nextDouble() * 2 * math.pi,
+          distance: math.Random().nextDouble() * 0.5 + 0.2,
+          size: math.Random().nextDouble() * 2 + 1,
+          speed: math.Random().nextDouble() * 0.02 + 0.01,
+        ));
+      }
+    }
+  }
+  
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = math.min(size.width, size.height) * 0.4;
+    
+    for (var particle in particles) {
+      // Update particle position based on progress
+      final angle = particle.angle + progress * particle.speed * 10;
+      final distance = particle.distance + (math.sin(progress * 2 * math.pi) * 0.05);
+      
+      final x = center.dx + math.cos(angle) * radius * distance;
+      final y = center.dy + math.sin(angle) * radius * distance;
+      
+      // Draw particle
+      final particlePaint = Paint()
+        ..color = Colors.blue.withOpacity(0.3 + 0.3 * math.sin(progress * 2 * math.pi + particle.angle))
+        ..style = PaintingStyle.fill;
+      
+      canvas.drawCircle(Offset(x, y), particle.size, particlePaint);
+    }
+  }
+  
+  @override
+  bool shouldRepaint(_ParticleEffectPainter oldDelegate) => true;
+}
+
+// Particle class for animation
+class _Particle {
+  double angle;
+  double distance;
+  double size;
+  double speed;
+  
+  _Particle({
+    required this.angle,
+    required this.distance,
+    required this.size,
+    required this.speed,
+  });
+}
+
+// Scanner line painter
+class _ScannerLinePainter extends CustomPainter {
+  final double progress;
+  
+  _ScannerLinePainter(this.progress);
+  
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = math.min(size.width, size.height) / 2;
+    
+    // Draw horizontal scanning line
+    final scanY = center.dy + math.sin(progress * 2 * math.pi) * radius * 0.7;
+    
+    final scanLinePaint = Paint()
+      ..shader = LinearGradient(
+        colors: [
+          Colors.transparent,
+          Colors.blue.withOpacity(0.8),
+          Colors.white.withOpacity(0.9),
+          Colors.blue.withOpacity(0.8),
+          Colors.transparent,
+        ],
+        stops: const [0.0, 0.2, 0.5, 0.8, 1.0],
+      ).createShader(Rect.fromLTWH(
+        center.dx - radius,
+        scanY - 1,
+        radius * 2,
+        2,
+      ))
+      ..style = PaintingStyle.fill;
+    
+    canvas.drawRect(
+      Rect.fromLTWH(
+        center.dx - radius,
+        scanY - 1,
+        radius * 2,
+        2,
+      ),
+      scanLinePaint,
+    );
+    
+    // Draw vertical scanning line
+    final scanX = center.dx + math.cos(progress * 2 * math.pi + math.pi/2) * radius * 0.7;
+    
+    final verticalScanPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          Colors.transparent,
+          Colors.blue.withOpacity(0.8),
+          Colors.white.withOpacity(0.9),
+          Colors.blue.withOpacity(0.8),
+          Colors.transparent,
+        ],
+        stops: const [0.0, 0.2, 0.5, 0.8, 1.0],
+      ).createShader(Rect.fromLTWH(
+        scanX - 1,
+        center.dy - radius,
+        2,
+        radius * 2,
+      ))
+      ..style = PaintingStyle.fill;
+    
+    canvas.drawRect(
+      Rect.fromLTWH(
+        scanX - 1,
+        center.dy - radius,
+        2,
+        radius * 2,
+      ),
+      verticalScanPaint,
+    );
+  }
+  
+  @override
+  bool shouldRepaint(_ScannerLinePainter oldDelegate) => true;
+}
+
 class ScanModal extends ConsumerWidget {
   const ScanModal({super.key});
 
@@ -651,34 +791,82 @@ class _ScanningAnimation extends StatefulWidget {
 }
 
 class _ScanningAnimationState extends State<_ScanningAnimation>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+    with TickerProviderStateMixin {
+  late AnimationController _mainController;
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(seconds: 2),
+    _mainController = AnimationController(
+      duration: const Duration(seconds: 3),
       vsync: this,
     )..repeat();
+    
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
+    
+    _pulseAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _pulseController,
+      curve: Curves.easeInOut,
+    ));
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _mainController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return CustomPaint(
-          painter: _ScanningPainter(_controller.value),
-          size: Size.infinite,
-        );
-      },
+    return Stack(
+      children: [
+        // Background glow effect
+        AnimatedBuilder(
+          animation: _pulseController,
+          builder: (context, child) {
+            return Container(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  colors: [
+                    Colors.blue.withOpacity(0.2 + 0.1 * _pulseAnimation.value),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.4, 1.0],
+                ),
+              ),
+            );
+          },
+        ),
+        // Main scanning animation
+        AnimatedBuilder(
+          animation: _mainController,
+          builder: (context, child) {
+            return CustomPaint(
+              painter: _ScanningPainter(_mainController.value),
+              size: Size.infinite,
+            );
+          },
+        ),
+        // Particle effects
+        AnimatedBuilder(
+          animation: _mainController,
+          builder: (context, child) {
+            return CustomPaint(
+              painter: _ParticleEffectPainter(_mainController.value),
+              size: Size.infinite,
+            );
+          },
+        ),
+      ],
     );
   }
 }
@@ -693,49 +881,120 @@ class _ScanningPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = math.min(size.width, size.height) * 0.4;
 
-    // Draw scanning lines
-    final scanPaint =
-        Paint()
-          ..shader = SweepGradient(
-            colors: [
-              Colors.blue.withOpacity(0),
-              Colors.blue.withOpacity(0.5),
-              Colors.blue.withOpacity(0),
-            ],
-            stops: const [0.0, 0.5, 1.0],
-            transform: GradientRotation(progress * 2 * math.pi),
-          ).createShader(Rect.fromCircle(center: center, radius: radius));
+    // Draw scanning lines with improved gradient
+    final scanPaint = Paint()
+      ..shader = SweepGradient(
+        colors: [
+          Colors.blue.withOpacity(0),
+          Colors.blue.withOpacity(0.1),
+          Colors.blue.withOpacity(0.6),
+          Colors.blue.withOpacity(0.1),
+          Colors.blue.withOpacity(0),
+        ],
+        stops: const [0.0, 0.3, 0.5, 0.7, 1.0],
+        transform: GradientRotation(progress * 2 * math.pi),
+      ).createShader(Rect.fromCircle(center: center, radius: radius));
 
     canvas.drawCircle(center, radius, scanPaint);
 
-    // Draw grid pattern
-    final gridPaint =
-        Paint()
-          ..color = Colors.blue.withOpacity(0.2)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1;
+    // Draw hexagonal grid pattern
+    final gridPaint = Paint()
+      ..color = Colors.blue.withOpacity(0.15)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.8;
 
-    for (var i = 0; i < 8; i++) {
-      final angle = i * math.pi / 4 + progress * 2 * math.pi;
+    // Horizontal and vertical grid lines
+    for (var i = -4; i <= 4; i += 2) {
+      final offset = i * (radius / 4);
+      
+      // Horizontal line
+      canvas.drawLine(
+        Offset(center.dx - radius * 0.8, center.dy + offset),
+        Offset(center.dx + radius * 0.8, center.dy + offset),
+        gridPaint,
+      );
+      
+      // Vertical line
+      canvas.drawLine(
+        Offset(center.dx + offset, center.dy - radius * 0.8),
+        Offset(center.dx + offset, center.dy + radius * 0.8),
+        gridPaint,
+      );
+    }
+
+    // Draw diagonal grid lines
+    for (var i = 0; i < 6; i++) {
+      final angle = i * math.pi / 3 + progress * math.pi / 2;
       canvas.drawLine(
         center,
         Offset(
-          center.dx + math.cos(angle) * radius,
-          center.dy + math.sin(angle) * radius,
+          center.dx + math.cos(angle) * radius * 0.8,
+          center.dy + math.sin(angle) * radius * 0.8,
         ),
         gridPaint,
       );
     }
 
-    // Draw pulsing circles
-    final pulsePaint =
-        Paint()
-          ..color = Colors.blue.withOpacity((1 - progress) * 0.5)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2;
+    // Draw scanning circle
+    final scanCirclePaint = Paint()
+      ..color = Colors.blue.withOpacity(0.6)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
 
-    canvas.drawCircle(center, radius * progress, pulsePaint);
-    canvas.drawCircle(center, radius * (1 - progress), pulsePaint);
+    // Animated scanning circle that moves up and down
+    final scanY = math.sin(progress * 2 * math.pi) * radius * 0.5;
+    canvas.drawCircle(
+      Offset(center.dx, center.dy + scanY),
+      radius * 0.3,
+      scanCirclePaint,
+    );
+
+    // Draw pulsing circles with improved effect
+    final pulsePaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          Colors.blue.withOpacity(0.7),
+          Colors.blue.withOpacity(0.0),
+        ],
+      ).createShader(Rect.fromCircle(center: center, radius: radius))
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+
+    // Multiple pulsing circles
+    final pulseRadius1 = radius * (0.3 + 0.7 * ((progress * 2) % 1.0));
+    final pulseRadius2 = radius * (0.3 + 0.7 * (((progress * 2) + 0.5) % 1.0));
+    
+    canvas.drawCircle(center, pulseRadius1, pulsePaint);
+    canvas.drawCircle(center, pulseRadius2, pulsePaint);
+    
+    // Draw targeting brackets at corners
+    final bracketPaint = Paint()
+      ..color = Colors.blue.withOpacity(0.8)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+
+    final bracketSize = radius * 0.15;
+    
+    // Draw brackets at four corners
+    for (var i = 0; i < 4; i++) {
+      final angle = i * math.pi / 2;
+      final x = center.dx + math.cos(angle) * radius * 0.7;
+      final y = center.dy + math.sin(angle) * radius * 0.7;
+      
+      // First line of bracket
+      canvas.drawLine(
+        Offset(x, y),
+        Offset(x - math.cos(angle) * bracketSize, y - math.sin(angle) * bracketSize),
+        bracketPaint,
+      );
+      
+      // Second line of bracket
+      canvas.drawLine(
+        Offset(x, y),
+        Offset(x - math.cos(angle + math.pi/2) * bracketSize, y - math.sin(angle + math.pi/2) * bracketSize),
+        bracketPaint,
+      );
+    }
   }
 
   @override
@@ -751,86 +1010,205 @@ class _ScannerOverlay extends StatefulWidget {
 }
 
 class _ScannerOverlayState extends State<_ScannerOverlay>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+    with TickerProviderStateMixin {
+  late AnimationController _mainController;
+  late AnimationController _pulseController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _rotationAnimation;
+  late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(seconds: 3),
+    _mainController = AnimationController(
+      duration: const Duration(seconds: 4),
       vsync: this,
     )..repeat();
 
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
+
     _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.2,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+      begin: 0.85,
+      end: 1.15,
+    ).animate(CurvedAnimation(parent: _mainController, curve: Curves.easeInOut));
 
     _rotationAnimation = Tween<double>(
       begin: 0,
       end: 2 * math.pi,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.linear));
+    ).animate(CurvedAnimation(parent: _mainController, curve: Curves.linear));
+    
+    _pulseAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut));
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _mainController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Stack(
-          children: [
-            Center(
-              child: Transform.rotate(
-                angle: _rotationAnimation.value,
-                child: Transform.scale(
-                  scale: _scaleAnimation.value,
-                  child: Container(
-                    width: 200,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Colors.blue.withOpacity(0.5),
-                        width: 2,
+    return Stack(
+      children: [
+        // Background glow effect
+        AnimatedBuilder(
+          animation: _pulseController,
+          builder: (context, child) {
+            return Container(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  colors: [
+                    Colors.blue.withOpacity(0.1 + 0.05 * _pulseAnimation.value),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.4, 1.0],
+                ),
+              ),
+            );
+          },
+        ),
+        
+        // Rotating elements
+        AnimatedBuilder(
+          animation: _mainController,
+          builder: (context, child) {
+            return Stack(
+              children: [
+                // Outer rotating circle
+                Center(
+                  child: Transform.rotate(
+                    angle: _rotationAnimation.value,
+                    child: Transform.scale(
+                      scale: _scaleAnimation.value,
+                      child: Container(
+                        width: 220,
+                        height: 220,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Colors.blue.withOpacity(0.6),
+                            width: 2,
+                          ),
+                          borderRadius: BorderRadius.circular(110),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.blue.withOpacity(0.3),
+                              blurRadius: 10,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        // Corner markers
+                        child: Stack(
+                          children: List.generate(4, (index) {
+                            final angle = index * (math.pi / 2);
+                            return Positioned(
+                              left: 110 + 100 * math.cos(angle) - 10,
+                              top: 110 + 100 * math.sin(angle) - 10,
+                              child: Container(
+                                width: 20,
+                                height: 20,
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.withOpacity(0.2),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.blue.withOpacity(0.8),
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
                       ),
-                      borderRadius: BorderRadius.circular(100),
                     ),
                   ),
                 ),
-              ),
-            ),
-            Center(
-              child: Container(
-                width: 180,
-                height: 180,
-                decoration: BoxDecoration(
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.8),
-                    width: 2,
+                
+                // Inner static circle with scanning text
+                Center(
+                  child: Container(
+                    width: 180,
+                    height: 180,
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.8),
+                        width: 2,
+                      ),
+                      borderRadius: BorderRadius.circular(90),
+                      gradient: RadialGradient(
+                        colors: [
+                          Colors.blue.withOpacity(0.1),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.1, 1.0],
+                      ),
+                    ),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.remove_red_eye_outlined,
+                            color: Colors.white.withOpacity(0.9),
+                            size: 32,
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Scanning...',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            width: 100,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(2),
+                              color: Colors.white.withOpacity(0.2),
+                            ),
+                            child: AnimatedBuilder(
+                              animation: _mainController,
+                              builder: (context, child) {
+                                return FractionallySizedBox(
+                                  alignment: Alignment.centerLeft,
+                                  widthFactor: _mainController.value,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(2),
+                                      color: Colors.white.withOpacity(0.8),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                  borderRadius: BorderRadius.circular(90),
                 ),
-                child: Center(
-                  child: Text(
-                    'Scanning...',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.titleMedium?.copyWith(color: Colors.white),
+                
+                // Scanning lines
+                Center(
+                  child: CustomPaint(
+                    painter: _ScannerLinePainter(_mainController.value),
+                    size: const Size(220, 220),
                   ),
                 ),
-              ),
-            ),
-          ],
-        );
-      },
+              ],
+            );
+          },
+        ),
+      ],
     );
   }
 }
