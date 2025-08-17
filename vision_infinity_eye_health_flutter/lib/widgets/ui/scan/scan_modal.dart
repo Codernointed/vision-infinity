@@ -3,12 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:math' as math;
-import '../../../services/gemini_service.dart';
+import '../../../services/camera_service.dart';
+import '../../../models/model_analysis_result.dart';
 import 'dart:io';
-import 'package:camera/camera.dart';
-import 'package:path_provider/path_provider.dart';
 
-enum ScanState { preparation, aligning, preview, scanning, processing, complete }
+enum ScanState {
+  preparation,
+  aligning,
+  preview,
+  scanning,
+  processing,
+  complete,
+}
 
 final scanStateProvider = StateProvider<ScanState>(
   (ref) => ScanState.preparation,
@@ -32,11 +38,7 @@ class ImagePreviewDialog extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Image.file(
-            File(image.path),
-            fit: BoxFit.contain,
-            height: 300,
-          ),
+          Image.file(File(image.path), fit: BoxFit.contain, height: 300),
           Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -74,12 +76,14 @@ class _ParticleEffectPainter extends CustomPainter {
     // Initialize particles if empty
     if (particles.isEmpty) {
       for (var i = 0; i < 20; i++) {
-        particles.add(_Particle(
+        particles.add(
+          _Particle(
           angle: math.Random().nextDouble() * 2 * math.pi,
           distance: math.Random().nextDouble() * 0.5 + 0.2,
           size: math.Random().nextDouble() * 2 + 1,
           speed: math.Random().nextDouble() * 0.02 + 0.01,
-        ));
+          ),
+        );
       }
     }
   }
@@ -92,14 +96,18 @@ class _ParticleEffectPainter extends CustomPainter {
     for (var particle in particles) {
       // Update particle position based on progress
       final angle = particle.angle + progress * particle.speed * 10;
-      final distance = particle.distance + (math.sin(progress * 2 * math.pi) * 0.05);
+      final distance =
+          particle.distance + (math.sin(progress * 2 * math.pi) * 0.05);
       
       final x = center.dx + math.cos(angle) * radius * distance;
       final y = center.dy + math.sin(angle) * radius * distance;
       
       // Draw particle
-      final particlePaint = Paint()
-        ..color = Colors.blue.withOpacity(0.3 + 0.3 * math.sin(progress * 2 * math.pi + particle.angle))
+      final particlePaint =
+          Paint()
+            ..color = Colors.blue.withOpacity(
+              0.3 + 0.3 * math.sin(progress * 2 * math.pi + particle.angle),
+            )
         ..style = PaintingStyle.fill;
       
       canvas.drawCircle(Offset(x, y), particle.size, particlePaint);
@@ -139,7 +147,8 @@ class _ScannerLinePainter extends CustomPainter {
     // Draw horizontal scanning line
     final scanY = center.dy + math.sin(progress * 2 * math.pi) * radius * 0.7;
     
-    final scanLinePaint = Paint()
+    final scanLinePaint =
+        Paint()
       ..shader = LinearGradient(
         colors: [
           Colors.transparent,
@@ -149,28 +158,23 @@ class _ScannerLinePainter extends CustomPainter {
           Colors.transparent,
         ],
         stops: const [0.0, 0.2, 0.5, 0.8, 1.0],
-      ).createShader(Rect.fromLTWH(
-        center.dx - radius,
-        scanY - 1,
-        radius * 2,
-        2,
-      ))
+          ).createShader(
+            Rect.fromLTWH(center.dx - radius, scanY - 1, radius * 2, 2),
+          )
       ..style = PaintingStyle.fill;
     
     canvas.drawRect(
-      Rect.fromLTWH(
-        center.dx - radius,
-        scanY - 1,
-        radius * 2,
-        2,
-      ),
+      Rect.fromLTWH(center.dx - radius, scanY - 1, radius * 2, 2),
       scanLinePaint,
     );
     
     // Draw vertical scanning line
-    final scanX = center.dx + math.cos(progress * 2 * math.pi + math.pi/2) * radius * 0.7;
+    final scanX =
+        center.dx +
+        math.cos(progress * 2 * math.pi + math.pi / 2) * radius * 0.7;
     
-    final verticalScanPaint = Paint()
+    final verticalScanPaint =
+        Paint()
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
@@ -182,21 +186,13 @@ class _ScannerLinePainter extends CustomPainter {
           Colors.transparent,
         ],
         stops: const [0.0, 0.2, 0.5, 0.8, 1.0],
-      ).createShader(Rect.fromLTWH(
-        scanX - 1,
-        center.dy - radius,
-        2,
-        radius * 2,
-      ))
+          ).createShader(
+            Rect.fromLTWH(scanX - 1, center.dy - radius, 2, radius * 2),
+          )
       ..style = PaintingStyle.fill;
     
     canvas.drawRect(
-      Rect.fromLTWH(
-        scanX - 1,
-        center.dy - radius,
-        2,
-        radius * 2,
-      ),
+      Rect.fromLTWH(scanX - 1, center.dy - radius, 2, radius * 2),
       verticalScanPaint,
     );
   }
@@ -372,11 +368,8 @@ class ScanModal extends ConsumerWidget {
                             height: 48,
                             child: ElevatedButton(
                               onPressed:
-                                  () => _handleButtonPress(
-                                    ref,
-                                    context,
-                                    scanState,
-                                  ),
+                                () =>
+                                    _handleButtonPress(ref, context, scanState),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: theme.colorScheme.primary,
                                 foregroundColor: theme.colorScheme.onPrimary,
@@ -397,7 +390,6 @@ class ScanModal extends ConsumerWidget {
           ),
         ),
       );
-    
   }
 
   Widget _buildPreparationStep(
@@ -444,7 +436,7 @@ class ScanModal extends ConsumerWidget {
       case ScanState.aligning:
         return 0.4;
       case ScanState.preview:
-        return 0.5;  // Add preview state
+        return 0.5; // Add preview state
       case ScanState.scanning:
         return 0.6;
       case ScanState.processing:
@@ -461,7 +453,7 @@ class ScanModal extends ConsumerWidget {
       case ScanState.aligning:
         return Icons.center_focus_strong_outlined;
       case ScanState.preview:
-        return Icons.preview_outlined;  // Add preview state
+        return Icons.preview_outlined; // Add preview state
       case ScanState.scanning:
         return Icons.camera_outlined;
       case ScanState.processing:
@@ -478,7 +470,7 @@ class ScanModal extends ConsumerWidget {
       case ScanState.aligning:
         return 'Alignment';
       case ScanState.preview:
-        return 'Preview';  // Add preview state
+        return 'Preview'; // Add preview state
       case ScanState.scanning:
         return 'Scanning';
       case ScanState.processing:
@@ -495,7 +487,7 @@ class ScanModal extends ConsumerWidget {
       case ScanState.aligning:
         return 'Position your face within the frame and keep your eyes open';
       case ScanState.preview:
-        return 'Review the image and confirm or retake';  // Add preview state
+        return 'Review the image and confirm or retake'; // Add preview state
       case ScanState.scanning:
         return 'Please remain still while we scan your eyes';
       case ScanState.processing:
@@ -512,7 +504,7 @@ class ScanModal extends ConsumerWidget {
       case ScanState.aligning:
         return 'Take Photo';
       case ScanState.preview:
-        return 'Confirm';  // Add preview state
+        return 'Confirm'; // Add preview state
       case ScanState.scanning:
       case ScanState.processing:
         return '';
@@ -524,7 +516,7 @@ class ScanModal extends ConsumerWidget {
   bool _shouldShowButton(ScanState state) {
     return state == ScanState.preparation ||
         state == ScanState.aligning ||
-        state == ScanState.preview ||  // Add preview state
+        state == ScanState.preview || // Add preview state
         state == ScanState.complete;
   }
 
@@ -537,13 +529,19 @@ class ScanModal extends ConsumerWidget {
       ref.read(scanStateProvider.notifier).state = ScanState.aligning;
     } else if (state == ScanState.aligning) {
       try {
-        final ImagePicker picker = ImagePicker();
+        final cameraService = CameraService();
+
         final option = await showDialog<String>(
           context: context,
-          builder: (BuildContext context) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            title: Text('Choose Image Source',
-                style: Theme.of(context).textTheme.titleLarge),
+          builder:
+              (BuildContext context) => AlertDialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                title: Text(
+                  'Choose Image Source',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -564,28 +562,51 @@ class ScanModal extends ConsumerWidget {
 
         if (option == null) return;
 
-        final XFile? image = await picker.pickImage(
-          source: option == 'camera' ? ImageSource.camera : ImageSource.gallery,
-          preferredCameraDevice: CameraDevice.front,
-          imageQuality: 100,
-        );
+        XFile? image;
+        if (option == 'camera') {
+          image = await cameraService.captureImage();
+        } else {
+          image = await cameraService.pickImageFromGallery();
+        }
 
         if (image == null) return;
+
+        // // Validate image quality
+        // if (!cameraService.validateImageQuality(image)) {
+        //   if (context.mounted) {
+        //     ScaffoldMessenger.of(context).showSnackBar(
+        //       const SnackBar(
+        //         content: Text(
+        //           'Image quality is too low. Please try again with a clearer image.',
+        //         ),
+        //         backgroundColor: Colors.orange,
+        //         behavior: SnackBarBehavior.fixed,
+        //         duration: Duration(seconds: 3),
+        //       ),
+        //     );
+        //   }
+        //   return;
+        // }
 
         if (!context.mounted) return;
 
         final bool? shouldProceed = await showDialog<bool>(
           context: context,
           barrierDismissible: false,
-          builder: (context) => Dialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          builder:
+              (context) => Dialog(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(12),
+                      ),
                   child: Image.file(
-                    File(image.path),
+                        File(image!.path),
                     fit: BoxFit.cover,
                     height: 300,
                   ),
@@ -637,7 +658,7 @@ class ScanModal extends ConsumerWidget {
             ..hideCurrentSnackBar()
             ..showSnackBar(
               const SnackBar(
-                content: Text('Analyzing eye image...'),
+                content: Text('Analyzing eye image with AI...'),
                 behavior: SnackBarBehavior.fixed,
                 duration: Duration(seconds: 2),
               ),
@@ -646,12 +667,35 @@ class ScanModal extends ConsumerWidget {
 
         ref.read(scanStateProvider.notifier).state = ScanState.processing;
         
-        final imageBytes = await image.readAsBytes();
-        final analysis = await GeminiService.analyzeEyeImage(imageBytes);
+        // Use the camera service to analyze the image
+        final ModelAnalysisResult? analysis = await cameraService.analyzeImage(
+          image,
+        );
+
+        print(
+          '🔍 Analysis result received: ${analysis != null ? 'SUCCESS' : 'NULL'}',
+        );
+        if (analysis != null) {
+          print('🔍 Analysis has error: ${analysis.hasError}');
+          print(
+            '🔍 Basic mode assessment: ${analysis.basicMode.overallAssessment}',
+          );
+        }
+
+        if (analysis == null) {
+          throw Exception(
+            'Failed to analyze image - camera service returned null',
+          );
+        }
         
         // Store analysis results
-        _lastAnalysis = analysis;
-        _lastImagePath = image.path;
+        _lastAnalysis = analysis.toJson();
+        _lastImagePath = image!.path;
+
+        print(
+          '💾 Stored analysis results: ${_lastAnalysis != null ? 'SUCCESS' : 'FAILED'}',
+        );
+        print('💾 Image path stored: $_lastImagePath');
         
         ref.read(scanStateProvider.notifier).state = ScanState.complete;
 
@@ -660,13 +704,14 @@ class ScanModal extends ConsumerWidget {
             ..hideCurrentSnackBar()
             ..showSnackBar(
               const SnackBar(
-                content: Text('Analysis complete! Click View Results to continue'),
+                content: Text(
+                  'AI analysis complete! Click View Results to continue',
+                ),
                 behavior: SnackBarBehavior.fixed,
                 duration: Duration(seconds: 2),
               ),
             );
         }
-
       } catch (e) {
         if (!context.mounted) return;
         
@@ -685,16 +730,31 @@ class ScanModal extends ConsumerWidget {
     } else if (state == ScanState.complete) {
       // Clear any existing snackbars before navigation
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      print('🚀 View Results button clicked!');
+      print(
+        '🚀 Last analysis data: ${_lastAnalysis != null ? 'AVAILABLE' : 'NULL'}',
+      );
+      print('🚀 Last image path: $_lastImagePath');
       
       Navigator.pop(context);
       await Future.delayed(const Duration(milliseconds: 200));
       
       if (context.mounted && _lastAnalysis != null && _lastImagePath != null) {
-        context.push('/results', extra: {
+        print('🚀 Navigating to results page...');
+        final navigationData = {
           ..._lastAnalysis!,
           'image_path': _lastImagePath,
           'timestamp': DateTime.now().toIso8601String(),
-        });
+        };
+        print('🚀 Navigation data: $navigationData');
+
+        context.push('/results', extra: navigationData);
+      } else {
+        print('❌ Cannot navigate - missing data:');
+        print('❌ Analysis: ${_lastAnalysis != null ? 'OK' : 'NULL'}');
+        print('❌ Image path: ${_lastImagePath != null ? 'OK' : 'NULL'}');
+        print('❌ Context mounted: ${context.mounted}');
       }
     }
   }
@@ -809,13 +869,9 @@ class _ScanningAnimationState extends State<_ScanningAnimation>
       vsync: this,
     )..repeat(reverse: true);
     
-    _pulseAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
+    _pulseAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
   }
 
   @override
@@ -882,7 +938,8 @@ class _ScanningPainter extends CustomPainter {
     final radius = math.min(size.width, size.height) * 0.4;
 
     // Draw scanning lines with improved gradient
-    final scanPaint = Paint()
+    final scanPaint =
+        Paint()
       ..shader = SweepGradient(
         colors: [
           Colors.blue.withOpacity(0),
@@ -898,7 +955,8 @@ class _ScanningPainter extends CustomPainter {
     canvas.drawCircle(center, radius, scanPaint);
 
     // Draw hexagonal grid pattern
-    final gridPaint = Paint()
+    final gridPaint =
+        Paint()
       ..color = Colors.blue.withOpacity(0.15)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.8;
@@ -936,7 +994,8 @@ class _ScanningPainter extends CustomPainter {
     }
 
     // Draw scanning circle
-    final scanCirclePaint = Paint()
+    final scanCirclePaint =
+        Paint()
       ..color = Colors.blue.withOpacity(0.6)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
@@ -950,7 +1009,8 @@ class _ScanningPainter extends CustomPainter {
     );
 
     // Draw pulsing circles with improved effect
-    final pulsePaint = Paint()
+    final pulsePaint =
+        Paint()
       ..shader = RadialGradient(
         colors: [
           Colors.blue.withOpacity(0.7),
@@ -968,7 +1028,8 @@ class _ScanningPainter extends CustomPainter {
     canvas.drawCircle(center, pulseRadius2, pulsePaint);
     
     // Draw targeting brackets at corners
-    final bracketPaint = Paint()
+    final bracketPaint =
+        Paint()
       ..color = Colors.blue.withOpacity(0.8)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
@@ -984,14 +1045,20 @@ class _ScanningPainter extends CustomPainter {
       // First line of bracket
       canvas.drawLine(
         Offset(x, y),
-        Offset(x - math.cos(angle) * bracketSize, y - math.sin(angle) * bracketSize),
+        Offset(
+          x - math.cos(angle) * bracketSize,
+          y - math.sin(angle) * bracketSize,
+        ),
         bracketPaint,
       );
       
       // Second line of bracket
       canvas.drawLine(
         Offset(x, y),
-        Offset(x - math.cos(angle + math.pi/2) * bracketSize, y - math.sin(angle + math.pi/2) * bracketSize),
+        Offset(
+          x - math.cos(angle + math.pi / 2) * bracketSize,
+          y - math.sin(angle + math.pi / 2) * bracketSize,
+        ),
         bracketPaint,
       );
     }
@@ -1030,20 +1097,18 @@ class _ScannerOverlayState extends State<_ScannerOverlay>
       vsync: this,
     )..repeat(reverse: true);
 
-    _scaleAnimation = Tween<double>(
-      begin: 0.85,
-      end: 1.15,
-    ).animate(CurvedAnimation(parent: _mainController, curve: Curves.easeInOut));
+    _scaleAnimation = Tween<double>(begin: 0.85, end: 1.15).animate(
+      CurvedAnimation(parent: _mainController, curve: Curves.easeInOut),
+    );
 
     _rotationAnimation = Tween<double>(
       begin: 0,
       end: 2 * math.pi,
     ).animate(CurvedAnimation(parent: _mainController, curve: Curves.linear));
     
-    _pulseAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut));
+    _pulseAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
   }
 
   @override
@@ -1162,7 +1227,9 @@ class _ScannerOverlayState extends State<_ScannerOverlay>
                           const SizedBox(height: 8),
                           Text(
                             'Scanning...',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            style: Theme.of(
+                              context,
+                            ).textTheme.titleMedium?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.w500,
                             ),

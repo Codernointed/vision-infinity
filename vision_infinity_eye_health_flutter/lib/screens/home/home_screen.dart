@@ -7,7 +7,7 @@ import '../../widgets/ui/scan/eye_scan_frame.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/ui/scan/scan_modal.dart';
 
-final isAdvancedModeProvider = StateProvider<bool>((ref) => false);
+import '../../core/providers/app_state_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});

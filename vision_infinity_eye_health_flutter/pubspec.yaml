@@ -49,6 +49,7 @@ dependencies:
   image_picker: ^1.1.2
   just_audio: ^0.9.36 # For playing audio files
   audio_session: ^0.1.18 # For audio session management
+  share_plus: ^9.0.0 # For sharing files and text
 
 dev_dependencies:
   flutter_test:
