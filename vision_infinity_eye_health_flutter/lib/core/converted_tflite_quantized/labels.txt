@@ -1,0 +1,3 @@
+0 cataract
+1 conjuctivitis
+2 normal
